@@ -36,7 +36,7 @@ impl HeedAuthStore {
 
     pub fn put_api_key(&self, key: Key) -> Result<Key> {
         let mut wtxn = self.env.write_txn()?;
-        self.keys.put(&mut wtxn, &key.key, &key)?;
+        self.keys.put(&mut wtxn, &key.id, &key)?;
         wtxn.commit()?;
 
         Ok(key)

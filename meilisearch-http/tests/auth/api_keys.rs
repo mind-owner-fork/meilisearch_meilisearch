@@ -30,7 +30,6 @@ async fn add_valid_api_key() {
     });
 
     let (response, code) = server.add_api_key(content).await;
-
     assert!(response["key"].is_string());
     assert!(response["expiresAt"].is_string());
     assert!(response["createdAt"].is_string());
@@ -443,11 +442,11 @@ async fn error_get_api_key_not_found() {
     server.use_api_key("MASTER_KEY");
 
     let (response, code) = server
-        .get_api_key("d0552b41536279a0ad88bd595327b96f01176a60c2243e906c52ac02375f9bc4")
+        .get_api_key("d0552b41-d0552b41536279a0ad88bd595327b96f01176a60c2243e906c52ac02375f9bc4")
         .await;
 
     let expected_response = json!({
-        "message": "API key `d0552b41536279a0ad88bd595327b96f01176a60c2243e906c52ac02375f9bc4` not found.",
+        "message": "API key `d0552b41` not found.",
         "code": "api_key_not_found",
         "type": "invalid_request",
         "link": "https://docs.meilisearch.com/errors#api_key_not_found"
@@ -644,11 +643,11 @@ async fn error_delete_api_key_not_found() {
     server.use_api_key("MASTER_KEY");
 
     let (response, code) = server
-        .delete_api_key("d0552b41536279a0ad88bd595327b96f01176a60c2243e906c52ac02375f9bc4")
+        .delete_api_key("d0552b41-d0552b41536279a0ad88bd595327b96f01176a60c2243e906c52ac02375f9bc4")
         .await;
 
     let expected_response = json!({
-        "message": "API key `d0552b41536279a0ad88bd595327b96f01176a60c2243e906c52ac02375f9bc4` not found.",
+        "message": "API key `d0552b41` not found.",
         "code": "api_key_not_found",
         "type": "invalid_request",
         "link": "https://docs.meilisearch.com/errors#api_key_not_found"
@@ -1039,13 +1038,13 @@ async fn error_patch_api_key_not_found() {
 
     let (response, code) = server
         .patch_api_key(
-            "d0552b41536279a0ad88bd595327b96f01176a60c2243e906c52ac02375f9bc4",
+            "d0552b41-d0552b41536279a0ad88bd595327b96f01176a60c2243e906c52ac02375f9bc4",
             json!({}),
         )
         .await;
 
     let expected_response = json!({
-        "message": "API key `d0552b41536279a0ad88bd595327b96f01176a60c2243e906c52ac02375f9bc4` not found.",
+        "message": "API key `d0552b41` not found.",
         "code": "api_key_not_found",
         "type": "invalid_request",
         "link": "https://docs.meilisearch.com/errors#api_key_not_found"

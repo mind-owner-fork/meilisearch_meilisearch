@@ -72,6 +72,10 @@ pub fn setup_meilisearch(opt: &Opt) -> anyhow::Result<MeiliSearch> {
         meilisearch.set_schedule_snapshot();
     }
 
+    if let Some(master_key) = &opt.master_key {
+        meilisearch.set_master_key(master_key.clone());
+    }
+
     meilisearch.build(opt.db_path.clone(), opt.indexer_options.clone())
 }
 

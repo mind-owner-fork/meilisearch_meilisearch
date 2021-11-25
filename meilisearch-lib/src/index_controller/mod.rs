@@ -27,7 +27,8 @@ use crate::index::{
 use crate::options::IndexerOpts;
 use error::Result;
 
-use self::auth_resolver::{AuthResolver, Key};
+use self::auth_resolver::AuthResolver;
+pub use self::auth_resolver::{Action, Key};
 use self::dump_actor::load_dump;
 use self::index_resolver::error::IndexResolverError;
 use self::index_resolver::index_store::{IndexStore, MapIndexStore};
@@ -123,6 +124,7 @@ pub struct IndexControllerBuilder {
     schedule_snapshot: bool,
     dump_src: Option<PathBuf>,
     dump_dst: Option<PathBuf>,
+    master_key: Option<String>,
 }
 
 impl IndexControllerBuilder {
@@ -203,12 +205,14 @@ impl IndexControllerBuilder {
         }
 
         let auth_resolver = Arc::new(AuthResolver::new(db_path)?);
+        let master_key = self.master_key;
 
         Ok(IndexController {
             index_resolver,
             update_sender,
             dump_handle,
             auth_resolver,
+            master_key,
         })
     }
 
@@ -273,6 +277,12 @@ impl IndexControllerBuilder {
         self.schedule_snapshot = true;
         self
     }
+
+    /// Set the index controller builder's master key.
+    pub fn set_master_key(&mut self, master_key: String) -> &mut Self {
+        self.master_key = Some(master_key);
+        self
+    }
 }
 
 // We are using derivative here to derive Clone, because U, I and D do not necessarily implement
@@ -284,6 +294,7 @@ pub struct IndexController<U, I, D> {
     update_sender: updates::UpdateSender,
     dump_handle: Arc<D>,
     auth_resolver: Arc<AuthResolver>,
+    master_key: Option<String>,
 }
 
 impl<U, I, D> IndexController<U, I, D>
@@ -528,6 +539,10 @@ where
     pub async fn delete_key(&self, key: impl AsRef<str>) -> Result<()> {
         Ok(self.auth_resolver.delete_key(key)?)
     }
+
+    pub fn master_key(&self) -> Option<&String> {
+        self.master_key.as_ref()
+    }
 }
 
 pub async fn get_arc_ownership_blocking<T>(mut item: Arc<T>) -> T {
@@ -571,6 +586,7 @@ mod test {
                 update_sender,
                 dump_handle: Arc::new(dump_handle),
                 auth_resolver: Arc::new(auth_resolver),
+                master_key: None,
             }
         }
     }

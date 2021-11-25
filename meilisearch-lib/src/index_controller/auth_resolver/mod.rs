@@ -1,11 +1,12 @@
 mod auth_store;
 pub mod error;
 
+use std::path::Path;
+
 use chrono::{DateTime, Utc};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_value, Value};
-use std::path::Path;
 
 use auth_store::HeedAuthStore;
 use error::{AuthResolverError, Result};
@@ -52,16 +53,15 @@ impl AuthResolver {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Key {
     #[serde(skip_serializing_if = "Option::is_none")]
-    description: Option<String>,
-    key: String,
-    actions: Vec<Action>,
-    indexes: Vec<String>,
-    expires_at: DateTime<Utc>,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    pub description: Option<String>,
+    pub id: String,
+    pub actions: Vec<Action>,
+    pub indexes: Vec<String>,
+    pub expires_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl Key {
@@ -74,7 +74,7 @@ impl Key {
             })
             .transpose()?;
 
-        let key = generate_key();
+        let id = generate_id();
 
         let actions = value
             .get("actions")
@@ -105,7 +105,7 @@ impl Key {
 
         Ok(Self {
             description,
-            key,
+            id,
             actions,
             indexes,
             expires_at,
@@ -178,11 +178,11 @@ pub enum Action {
 }
 
 /// Generate a printable key of 64 characters using thread_rng.
-fn generate_key() -> String {
+fn generate_id() -> String {
     const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     let mut rng = rand::thread_rng();
     std::iter::repeat_with(|| CHARSET[rng.gen_range(0..CHARSET.len())] as char)
-        .take(64)
+        .take(8)
         .collect()
 }

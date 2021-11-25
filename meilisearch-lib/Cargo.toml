@@ -18,6 +18,7 @@ chrono = { version = "0.4.19", features = ["serde"] }
 csv = "1.1.6"
 crossbeam-channel = "0.5.1"
 either = "1.6.1"
+enum-repr = "0.2.6"
 flate2 = "1.0.21"
 fst = "0.4.7"
 futures = "0.3.17"

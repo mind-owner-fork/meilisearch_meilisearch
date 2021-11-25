@@ -4,11 +4,12 @@ pub mod error;
 use std::path::Path;
 
 use chrono::{DateTime, Utc};
+use enum_repr::EnumRepr;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_value, Value};
 
-use auth_store::HeedAuthStore;
+use auth_store::{HeedAuthStore, KEY_ID_LENGTH};
 use error::{AuthResolverError, Result};
 
 pub struct AuthResolver {
@@ -56,7 +57,7 @@ impl AuthResolver {
 pub struct Key {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    pub id: String,
+    pub id: [u8; KEY_ID_LENGTH],
     pub actions: Vec<Action>,
     pub indexes: Vec<String>,
     pub expires_at: DateTime<Utc>,
@@ -146,7 +147,10 @@ impl Key {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[EnumRepr(type = "u8", implicit = true)]
 pub enum Action {
+    #[serde(rename = "*")]
+    All,
     #[serde(rename = "search")]
     Search,
     #[serde(rename = "documents.add")]
@@ -178,11 +182,14 @@ pub enum Action {
 }
 
 /// Generate a printable key of 64 characters using thread_rng.
-fn generate_id() -> String {
+fn generate_id() -> [u8; KEY_ID_LENGTH] {
     const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     let mut rng = rand::thread_rng();
-    std::iter::repeat_with(|| CHARSET[rng.gen_range(0..CHARSET.len())] as char)
-        .take(8)
-        .collect()
+    let mut bytes = [0; KEY_ID_LENGTH];
+    for byte in bytes.iter_mut() {
+        *byte = CHARSET[rng.gen_range(0..CHARSET.len())];
+    }
+
+    bytes
 }

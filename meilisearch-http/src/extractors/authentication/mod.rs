@@ -11,6 +11,7 @@ use futures::future::{ok, Ready};
 
 use crate::error::ResponseError;
 use error::AuthenticationError;
+use meilisearch_lib::index_controller::Action;
 
 macro_rules! create_policies {
     ($($name:ident), *) => {

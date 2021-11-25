@@ -1,3 +1,5 @@
+use std::str;
+
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use log::debug;
@@ -60,7 +62,7 @@ pub async fn get_api_key(
     analytics: web::Data<dyn Analytics>,
 ) -> Result<HttpResponse, ResponseError> {
     // keep 8 first characters that are the ID of the API key.
-    let key = meilisearch.get_key(&path.api_key[..8]).await?;
+    let key = meilisearch.get_key(&path.api_key).await?;
     let res = KeyView::from_key(key, meilisearch.master_key());
 
     debug!("returns: {:?}", res);
@@ -75,7 +77,7 @@ pub async fn patch_api_key(
 ) -> Result<HttpResponse, ResponseError> {
     let key = meilisearch
         // keep 8 first characters that are the ID of the API key.
-        .update_key(&path.api_key[..8], body.into_inner())
+        .update_key(&path.api_key, body.into_inner())
         .await?;
     let res = KeyView::from_key(key, meilisearch.master_key());
 
@@ -89,7 +91,7 @@ pub async fn delete_api_key(
     analytics: web::Data<dyn Analytics>,
 ) -> Result<HttpResponse, ResponseError> {
     // keep 8 first characters that are the ID of the API key.
-    meilisearch.delete_key(&path.api_key[..8]).await?;
+    meilisearch.delete_key(&path.api_key).await?;
 
     Ok(HttpResponse::NoContent().json(()))
 }
@@ -114,9 +116,10 @@ struct KeyView {
 
 impl KeyView {
     fn from_key(key: Key, master_key: Option<&String>) -> Self {
+        let key_id = str::from_utf8(&key.id).unwrap();
         let generated_key = match master_key {
-            Some(master_key) => generate_key(master_key, &key.id),
-            None => generate_key("", &key.id),
+            Some(master_key) => generate_key(master_key, &key_id),
+            None => generate_key("", &key_id),
         };
 
         KeyView {
@@ -134,5 +137,5 @@ impl KeyView {
 fn generate_key(master_key: &str, uid: &str) -> String {
     let key = format!("{}-{}", uid, master_key);
     let sha = Sha256::digest(key.as_bytes());
-    format!("{}-{:x}", uid, sha)
+    format!("{}{:x}", uid, sha)
 }
